@@ -1,27 +1,41 @@
-import { checkRules } from './RuleChecker';
-import { analyzeQuality } from './QualityAnalyzer';
+import { openai } from '../config/services';
 
-interface ScoredResponse {
-  text: string;
+interface ExpertResponse {
+  content: string;
   score: number;
+  quality: number;
 }
 
-// Kombiniert Expertenantworten, führt Checks durch und generiert ein finales Resultat
-export async function generateResponse(expertResponses: string[]): Promise<string> {
-  // Regelprüfung und Qualitätsanalyse
-  const validResponses = expertResponses.filter((resp) => checkRules(resp));
-  
-  const scoredResponses: Promise<ScoredResponse>[] = validResponses.map(async (resp) => {
-    const quality = await analyzeQuality(resp);
-    return {
-      text: resp,
-      score: quality.overall
-    };
+export async function generateResponse(expertResponses: ExpertResponse[]): Promise<string> {
+  // Sortiere die Antworten nach Score und Qualität
+  const scored = [...expertResponses].sort((a, b) => {
+    const scoreComparison = Number(b.score) - Number(a.score);
+    if (scoreComparison !== 0) return scoreComparison;
+    return Number(b.quality) - Number(a.quality);
   });
 
-  const scored = await Promise.all(scoredResponses);
-  scored.sort((a, b) => Number(b.score) - Number(a.score));
+  // Wähle die beste Antwort aus
+  const bestResponse = scored[0];
+  
+  try {
+    // Verbessere die beste Antwort mit GPT
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "Du bist ein Experte für präzise und hilfreiche Antworten. Verbessere die folgende Antwort, indem du sie klarer und informativer machst."
+        },
+        {
+          role: "user",
+          content: bestResponse.content
+        }
+      ]
+    });
 
-  // Hier könnte man ggf. GPT-Aufrufe einbinden, um die finalen Antworten zu verfeinern
-  return scored.length ? scored[0].text : 'Keine passende Antwort gefunden.';
+    return completion.choices[0]?.message?.content || bestResponse.content;
+  } catch (error) {
+    console.error('Fehler bei der GPT-Verbesserung:', error);
+    return bestResponse.content;
+  }
 }
