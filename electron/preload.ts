@@ -10,4 +10,3 @@ contextBridge.exposeInMainWorld('electronAPI', {
 });
 
 export {};
-export {};
