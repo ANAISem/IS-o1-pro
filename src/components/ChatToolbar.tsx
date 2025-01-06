@@ -1,38 +1,35 @@
 import React from 'react';
 
-interface ChatToolbarProps {
+export interface ChatToolbarProps {
   input: string;
-  onInputChange: (val: string) => void;
-  onSend: () => void;
-  isLoading: boolean;
+  onInputChange: (value: string) => void;
+  onSend: () => Promise<void>;
+  isLoading?: boolean;
 }
 
-const ChatToolbar: React.FC<ChatToolbarProps> = ({ input, onInputChange, onSend, isLoading }) => {
+export const ChatToolbar: React.FC<ChatToolbarProps> = ({
+  input,
+  onInputChange,
+  onSend,
+  isLoading = false
+}) => {
   return (
-    <div style={{ marginTop: '1rem', display: 'flex', gap: '8px' }}>
+    <div className="flex gap-2 p-4 border-t">
       <input
         type="text"
         value={input}
         onChange={(e) => onInputChange(e.target.value)}
-        style={{ width: '80%', padding: '8px' }}
+        placeholder="Type your message..."
+        className="flex-1 p-2 border rounded"
         disabled={isLoading}
       />
-      <button 
-        onClick={onSend} 
-        disabled={isLoading}
-        style={{ 
-          padding: '8px 16px',
-          backgroundColor: isLoading ? '#ccc' : '#007bff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: isLoading ? 'not-allowed' : 'pointer'
-        }}
+      <button
+        onClick={onSend}
+        disabled={isLoading || !input.trim()}
+        className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400"
       >
-        {isLoading ? 'Sendet...' : 'Senden'}
+        {isLoading ? 'Sending...' : 'Send'}
       </button>
     </div>
   );
 };
-
-export default ChatToolbar;

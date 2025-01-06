@@ -5,12 +5,10 @@ interface DiscussionContext {
 }
 
 export default {
-  adjustFlow(context: DiscussionContext) {
-    const { currentTopic, messageCount, lastResponseQuality } = context;
-    // Implementierung folgt
+  adjustFlow(_context: DiscussionContext) {
     return {
-      shouldChangeTopic: messageCount > 5 && (lastResponseQuality || 0) < 0.5,
-      suggestedTopic: currentTopic || 'general'
+      shouldChangeTopic: _context.messageCount > 5 && (_context.lastResponseQuality || 0) < 0.5,
+      suggestedTopic: _context.currentTopic || 'general'
     };
   },
 };
